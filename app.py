@@ -87,7 +87,7 @@ def getLungCancerPrediction():
     new_scaled_input = pd.DataFrame(scaled_input, columns=feature_names)
 
     prediction = l_m_data.predict(new_scaled_input)
-     
+
     if prediction[0] == 1:
         return jsonify({"result":"Positive-Lung Cancer"})
     elif prediction[0] == 0:
@@ -97,9 +97,18 @@ def getLungCancerPrediction():
 @app.route("/api/get-migraine-prediction",methods=["POST"])
 def getMigrainePrediction():
     data = request.get_json()
-    df_input =np.array([[data["Age"],data["Duration"],data["Frequency"],data["Location"],data["Character"],data["Intensity"],data["Nausea"],data["Vomit"],data["Phonophobia"],data["Photophobia"],data["Visual"],data["Sensory"],data["Dysphasia"],data["Dysarthria"],data["Vertigo"],data["Tinnitus"],data["Hypoacusis"],data["Diplopia"],data["Defect"],data["Ataxia"],data["Conscience"],data["Paresthesia"],data["DPF"]]])
-    scaled_input = m_s_data.transform(df_input)
-    prediction = m_m_data.predict(scaled_input)
+
+    feature_names = [
+    "Age","Duration","Frequency","Location","Character","Intensity","Nausea","Vomit","Phonophobia","Photophobia","Visual","Sensory","Dysphasia","Dysarthria","Vertigo","Tinnitus","Hypoacusis","Diplopia","Defect","Ataxia","Conscience","Paresthesia","DPF"
+    ]
+    
+    df_input = pd.DataFrame([[data["Age"],data["Duration"],data["Frequency"],data["Location"],data["Character"],data["Intensity"],data["Nausea"],data["Vomit"],data["Phonophobia"],data["Photophobia"],data["Visual"],data["Sensory"],data["Dysphasia"],data["Dysarthria"],data["Vertigo"],data["Tinnitus"],data["Hypoacusis"],data["Diplopia"],data["Defect"],data["Ataxia"],data["Conscience"],data["Paresthesia"],data["DPF"]]],columns=feature_names)
+    
+    new_sample_scaled = m_s_data.transform(df_input)
+
+    new_sample_scaled_df = pd.DataFrame(new_sample_scaled, columns=feature_names)
+
+    prediction = m_m_data.predict(new_sample_scaled_df)
     if prediction[0] == 0:
         return jsonify({"result":"Migraine without aura"})
     elif prediction[0] == 1:
