@@ -75,13 +75,23 @@ def getDiabeticPrediction():
 @app.route("/api/get-lung-cancer-prediction",methods=["POST"])
 def getLungCancerPrediction():
     data = request.get_json()
-    df_input = np.array([[data["GENDER"],data["AGE"],data["SMOKING"],data["YELLOW_FINGERS"],data["ANXIETY"],data["PEER_PRESSURE"],data["CHRONIC DISEASE"],data["FATIGUE"],data["ALLERGY"],data["WHEEZING"],data["ALCOHOL CONSUMING"],data["COUGHING"],data["SHORTNESS OF BREATH"],data["SWALLOWING DIFFICULTY"],data["CHEST PAIN"]]])
-    scaled_input = l_s_data.transform(df_input) 
-    prediction = l_m_data.predict(scaled_input) 
+
+    feature_names = ['GENDER','AGE','SMOKING','YELLOW_FINGERS','ANXIETY','PEER_PRESSURE',
+                   'CHRONIC DISEASE','FATIGUE ','ALLERGY ','WHEEZING','ALCOHOL CONSUMING',
+                   'COUGHING','SHORTNESS OF BREATH','SWALLOWING DIFFICULTY','CHEST PAIN']
+    
+    df_input = pd.DataFrame([[data["GENDER"],data["AGE"],data["SMOKING"],data["YELLOW_FINGERS"],data["ANXIETY"],data["PEER_PRESSURE"],data["CHRONIC DISEASE"],data["FATIGUE"],data["ALLERGY"],data["WHEEZING"],data["ALCOHOL CONSUMING"],data["COUGHING"],data["SHORTNESS OF BREATH"],data["SWALLOWING DIFFICULTY"],data["CHEST PAIN"]]],columns=feature_names)
+    
+    scaled_input = l_s_data.transform(df_input)
+
+    new_scaled_input = pd.DataFrame(scaled_input, columns=feature_names)
+
+    prediction = l_m_data.predict(new_scaled_input)
+     
     if prediction[0] == 1:
-        return jsonify({"result":"Positive for Lung Cancer"})
+        return jsonify({"result":"Positive-Lung Cancer"})
     elif prediction[0] == 0:
-        return jsonify({"result":"No Signs of Lung Cancer Detected"})
+        return jsonify({"result":"No Signs-Lung Cancer"})
     
 
 @app.route("/api/get-migraine-prediction",methods=["POST"])
