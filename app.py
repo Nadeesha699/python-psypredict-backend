@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask,  request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
@@ -14,6 +14,7 @@ migrane_model_data = joblib.load("./model/migrane_best_model.pkl")
 
 de_m_data = depression_model_data["model"]
 de_s_data = depression_model_data["scaler"]
+de_label_encoders = depression_model_data['label_encoders']
 
 di_m_data = diabetic_model_data["model"]
 di_s_data = diabetic_model_data["scaler"]
@@ -28,26 +29,20 @@ m_s_data = migrane_model_data["scaler"]
 def getDepressionPrediction():
      
      data = request.get_json()
-     encoded_input = {
-      "Gender": 1 if data["Gender"] == "Male" else 0,
-      "Age": data["Age"],
-      "Profession": 0 if data["Profession"] == "Student" else 1, 
-      "Academic Pressure": data["Academic Pressure"],
-      "Work Pressure": data["Work Pressure"],
-      "CGPA": data["CGPA"],
-      "Study Satisfaction": data["Study Satisfaction"],
-      "Job Satisfaction": data["Job Satisfaction"],
-      "Sleep Duration": 1 if data["Sleep Duration"] == "5-6 hours" else 0, 
-      "Dietary Habits": 1 if data["Dietary Habits"] == "Healthy" else 0,
-      "Have you ever had suicidal thoughts ?": 1 if data["Have you ever had suicidal thoughts ?"] == "Yes" else 0,
-      "Work/Study Hours": data["Work/Study Hours"],
-      "Financial Stress": data["Financial Stress"],
-      "Family History of Mental Illness": 1 if data["Family History of Mental Illness"] == "Yes" else 0
-     }
 
-     df_input = pd.DataFrame([encoded_input])
-     scaled_input = de_s_data.transform(df_input)
+     df_input = pd.DataFrame([data])
+     for col, le in de_label_encoders.items():
+        if col in df_input:
+            try:
+                df_input[col] = le.transform(df_input[col])
+            except ValueError:
+                df_input[col] = le.transform([le.classes_[0]])
+
+     scaled_input = pd.DataFrame(de_s_data.transform(df_input), columns=df_input.columns)
+
+   
      prediction = de_m_data.predict(scaled_input)
+ 
      if prediction[0] == 1:
         return jsonify({"result":"Depression"})
      elif prediction[0] == 0:
