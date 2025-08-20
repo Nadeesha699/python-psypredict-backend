@@ -60,7 +60,7 @@ def getDiabeticPrediction():
 
     df_input = pd.DataFrame([[data["Pregnancies"],data["Glucose"],data["BloodPressure"],data["SkinThickness"],data["Insulin"],data["BMI"],data["DiabetesPedigreeFunction"],data["Age"]]],columns=feature_names)
     
-    new_sample_scaled = de_s_data.transform(df_input)
+    new_sample_scaled = di_s_data.transform(df_input)
 
     scaled_input = pd.DataFrame(new_sample_scaled, columns=feature_names)
     
