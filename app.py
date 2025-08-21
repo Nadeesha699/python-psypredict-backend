@@ -121,6 +121,8 @@ def getMigrainePrediction():
         return jsonify({"result":"Sporadic hemiplegic migraine"})
     elif prediction[0] == 5:
         return jsonify({"result":"Typical aura with migraine"})
+    elif prediction[0] == 6:
+        return jsonify({"result":"Basilar-type aura"})
 
 if __name__ == "__main__":
     app.run(debug=True)
