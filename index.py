@@ -7,18 +7,18 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-BASE_DIR = os.path.dirname(__file__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def load_model(path):
+    return joblib.load(os.path.join(BASE_DIR, "..", "model", path))
 
 # Load models
-def load_model(path):
-    return joblib.load(os.path.join(BASE_DIR, "../model", path))
-
 depression_model_data = load_model("depression_best_model.pkl")
 diabetic_model_data = load_model("diabetic_best_model.pkl")
 lung_model_data = load_model("lung_cancer_best_model.pkl")
 migraine_model_data = load_model("migrane_best_model.pkl")
 
-# Extract parts
+# Extract
 de_m = depression_model_data["model"]
 de_s = depression_model_data["scaler"]
 de_enc = depression_model_data["label_encoders"]
@@ -32,83 +32,100 @@ l_s = lung_model_data["scaler"]
 m_m = migraine_model_data["model"]
 m_s = migraine_model_data["scaler"]
 
+# ✅ TEST ROUTE
+@app.route("/")
+def home():
+    return "API WORKING"
+
 # ------------------ ROUTES ------------------
 
 @app.route("/api/get-depression-predition", methods=["POST"])
 def depression():
-    data = request.get_json()
-    df = pd.DataFrame([data])
+    try:
+        data = request.get_json() or {}
+        df = pd.DataFrame([data])
 
-    for col, le in de_enc.items():
-        if col in df:
-            try:
-                df[col] = le.transform(df[col])
-            except:
-                df[col] = le.transform([le.classes_[0]])
+        for col, le in de_enc.items():
+            if col in df:
+                try:
+                    df[col] = le.transform(df[col])
+                except:
+                    df[col] = le.transform([le.classes_[0]])
 
-    scaled = de_s.transform(df)
-    pred = de_m.predict(scaled)
+        scaled = de_s.transform(df)
+        pred = de_m.predict(scaled)
 
-    return jsonify({"result": "Depression" if pred[0] == 1 else "Non-Depression"})
+        return jsonify({"result": "Depression" if pred[0] == 1 else "Non-Depression"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/get-diabetic-prediction", methods=["POST"])
 def diabetic():
-    data = request.get_json()
+    try:
+        data = request.get_json() or {}
 
-    features = ["Pregnancies","Glucose","BloodPressure","SkinThickness",
-                "Insulin","BMI","DiabetesPedigreeFunction","Age"]
+        features = ["Pregnancies","Glucose","BloodPressure","SkinThickness",
+                    "Insulin","BMI","DiabetesPedigreeFunction","Age"]
 
-    df = pd.DataFrame([[data[f] for f in features]], columns=features)
+        df = pd.DataFrame([[data.get(f, 0) for f in features]], columns=features)
 
-    scaled = di_s.transform(df)
-    pred = di_m.predict(scaled)
+        scaled = di_s.transform(df)
+        pred = di_m.predict(scaled)
 
-    return jsonify({"result": "Diabetic" if pred[0] == 1 else "Non-Diabetic"})
+        return jsonify({"result": "Diabetic" if pred[0] == 1 else "Non-Diabetic"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/get-lung-cancer-prediction", methods=["POST"])
 def lung():
-    data = request.get_json()
+    try:
+        data = request.get_json() or {}
 
-    features = ['GENDER','AGE','SMOKING','YELLOW_FINGERS','ANXIETY','PEER_PRESSURE',
-                'CHRONIC DISEASE','FATIGUE','ALLERGY','WHEEZING','ALCOHOL CONSUMING',
-                'COUGHING','SHORTNESS OF BREATH','SWALLOWING DIFFICULTY','CHEST PAIN']
+        features = ['GENDER','AGE','SMOKING','YELLOW_FINGERS','ANXIETY','PEER_PRESSURE',
+                    'CHRONIC DISEASE','FATIGUE','ALLERGY','WHEEZING','ALCOHOL CONSUMING',
+                    'COUGHING','SHORTNESS OF BREATH','SWALLOWING DIFFICULTY','CHEST PAIN']
 
-    df = pd.DataFrame([[data[f] for f in features]], columns=features)
+        df = pd.DataFrame([[data.get(f, 0) for f in features]], columns=features)
 
-    scaled = l_s.transform(df)
-    pred = l_m.predict(scaled)
+        scaled = l_s.transform(df)
+        pred = l_m.predict(scaled)
 
-    return jsonify({"result": "Positive-Lung Cancer" if pred[0] == 1 else "No Signs-Lung Cancer"})
+        return jsonify({"result": "Positive-Lung Cancer" if pred[0] == 1 else "No Signs-Lung Cancer"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/get-migraine-prediction", methods=["POST"])
 def migraine():
-    data = request.get_json()
+    try:
+        data = request.get_json() or {}
 
-    features = ["Age","Duration","Frequency","Location","Character","Intensity",
-                "Nausea","Vomit","Phonophobia","Photophobia","Visual","Sensory",
-                "Dysphasia","Dysarthria","Vertigo","Tinnitus","Hypoacusis",
-                "Diplopia","Defect","Ataxia","Conscience","Paresthesia","DPF"]
+        features = ["Age","Duration","Frequency","Location","Character","Intensity",
+                    "Nausea","Vomit","Phonophobia","Photophobia","Visual","Sensory",
+                    "Dysphasia","Dysarthria","Vertigo","Tinnitus","Hypoacusis",
+                    "Diplopia","Defect","Ataxia","Conscience","Paresthesia","DPF"]
 
-    df = pd.DataFrame([[data[f] for f in features]], columns=features)
+        df = pd.DataFrame([[data.get(f, 0) for f in features]], columns=features)
 
-    scaled = m_s.transform(df)
-    pred = m_m.predict(scaled)
+        scaled = m_s.transform(df)
+        pred = m_m.predict(scaled)
 
-    results = {
-        0: "Migraine without aura",
-        1: "Typical aura without migraine",
-        2: "Migraine without aura",
-        3: "Familial hemiplegic migraine",
-        4: "Sporadic hemiplegic migraine",
-        5: "Typical aura with migraine",
-        6: "Basilar-type aura"
-    }
+        results = {
+            0: "Migraine without aura",
+            1: "Typical aura without migraine",
+            2: "Migraine without aura",
+            3: "Familial hemiplegic migraine",
+            4: "Sporadic hemiplegic migraine",
+            5: "Typical aura with migraine",
+            6: "Basilar-type aura"
+        }
 
-    return jsonify({"result": results.get(pred[0], "Unknown")})
+        return jsonify({"result": results.get(pred[0], "Unknown")})
 
-
-# 👇 REQUIRED for Vercel
-# DO NOT use app.run()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
